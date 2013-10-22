@@ -34,7 +34,9 @@ using namespace RobotKin;
 Robot::Robot()
         : Frame::Frame(TRANSFORM::Identity()),
           respectToWorld_(TRANSFORM::Identity()),
-          initializing_(false)
+          initializing_(false),
+          imposeLimits(true),
+          verbose(false)
 {
     linkages_.resize(0);
     frameType_ = ROBOT;
@@ -43,7 +45,9 @@ Robot::Robot()
 Robot::Robot(vector<Linkage> linkageObjs, vector<int> parentIndices)
         : Frame::Frame(TRANSFORM::Identity()),
           respectToWorld_(TRANSFORM::Identity()),
-          initializing_(false)
+          initializing_(false),
+          imposeLimits(true),
+          verbose(false)
 {
     frameType_ = ROBOT;
     
@@ -55,7 +59,8 @@ Robot::Robot(vector<Linkage> linkageObjs, vector<int> parentIndices)
 Robot::Robot(string filename, string name, size_t id)
     : Frame::Frame(TRANSFORM::Identity(), name, id, ROBOT),
       respectToWorld_(TRANSFORM::Identity()),
-      initializing_(false)
+      initializing_(false),
+      verbose(false)
 {
     // TODO: Test to make sure filename ends with ".urdf"
     linkages_.resize(0);
@@ -75,7 +80,9 @@ bool Robot::loadURDFString(string filename)
 Robot::Robot(string filename, string name, size_t id)
     : Frame::Frame(TRANSFORM::Identity(), name, id, ROBOT),
       respectToWorld_(TRANSFORM::Identity()),
-      initializing_(false)
+      initializing_(false),
+      imposeLimits(true),
+      verbose(false)
 {
     std::cerr << "There was no URDF Parser installed when you compiled RobotKin!" << std::endl;
 }
@@ -83,11 +90,13 @@ Robot::Robot(string filename, string name, size_t id)
 bool Robot::loadURDF(string filename)
 {
     std::cerr << "There was no URDF Parser installed when you compiled RobotKin!" << std::endl;
+    return false;
 }
 
 bool Robot::loadURDFString(string filename)
 {
     std::cerr << "There was no URDF Parser installed when you compiled RobotKin!" << std::endl;
+    return false;
 }
 
 #endif // HAVE_URDF_PARSE
@@ -97,6 +106,13 @@ bool Robot::loadURDFString(string filename)
 Robot::~Robot()
 {
     
+}
+
+
+Robot& Robot::Default()
+{
+    Robot* tempRobot = new Robot;
+    return *tempRobot;
 }
 
 
@@ -234,17 +250,17 @@ VectorXd Robot::values() const
     return theValues;
 }
 
-void Robot::values(const VectorXd& someValues) {
+void Robot::values(const VectorXd& allValues) {
 
-    if(someValues.size() == nJoints())
+    if(allValues.size() == nJoints())
     {
         for (size_t i = 0; i < nJoints(); ++i) {
-            joints_[i]->value(someValues(i));
+            joints_[i]->value(allValues(i), true);
         }
         updateFrames();
     }
     else
-        cerr << "Invalid number of joint values: " << someValues.size()
+        cerr << "Invalid number of joint values: " << allValues.size()
              << "\n\t This should be equal to " << nJoints()
              << "\n\t See line (" << __LINE__-10 << ") of Robot.cpp"
              << endl;
@@ -255,7 +271,7 @@ void Robot::values(const vector<size_t>& jointIndices, const VectorXd& jointValu
     if( jointIndices.size() == jointValues.size() )
     {
         for(size_t i=0; i<jointIndices.size(); i++)
-            joints_[jointIndices[i]]->value(jointValues[i]);
+            joints_[jointIndices[i]]->value(jointValues[i], true);
         updateFrames();
     }
     else
@@ -265,9 +281,9 @@ void Robot::values(const vector<size_t>& jointIndices, const VectorXd& jointValu
              << endl;
 }
 
-rk_result_t Robot::setJointValue(string jointName, double val){ return joint(jointName).value(val); }
+rk_result_t Robot::setJointValue(string jointName, double val, bool update){ return joint(jointName).value(val, update); }
 
-rk_result_t Robot::setJointValue(size_t jointIndex, double val){ return joint(jointIndex).value(val); }
+rk_result_t Robot::setJointValue(size_t jointIndex, double val, bool update){ return joint(jointIndex).value(val, update); }
 
 const TRANSFORM& Robot::respectToFixed() const { return respectToFixed_; }
 void Robot::respectToFixed(TRANSFORM aCoordinate)
@@ -279,6 +295,11 @@ void Robot::respectToFixed(TRANSFORM aCoordinate)
 TRANSFORM Robot::respectToWorld() const
 {
     return respectToWorld_;
+}
+
+void Robot::respectToWorld( TRANSFORM _Tworld )
+{
+    respectToWorld_ = _Tworld;
 }
 
 void Robot::jacobian(MatrixXd& J, const vector<Joint*>& jointFrames, TRANSLATION location, const Frame* refFrame) const
@@ -450,17 +471,22 @@ void Robot::addLinkage(int parentIndex, string name)
 //------------------------------------------------------------------------------
 void Robot::updateFrames()
 {
-    if (~initializing_) {
-        for (vector<Linkage*>::iterator linkageIt = linkages_.begin();
-             linkageIt != linkages_.end(); ++linkageIt) {
-            
-            if ((*linkageIt)->parentLinkage_ == 0) {
-                (*linkageIt)->respectToRobot_ = (*linkageIt)->respectToFixed_;
-            } else {
-                (*linkageIt)->respectToRobot_ = (*linkageIt)->parentLinkage_->tool_.respectToRobot() * (*linkageIt)->respectToFixed_;
-            }
-        }
+
+    for (vector<Linkage*>::iterator linkageIt = linkages_.begin();
+         linkageIt != linkages_.end(); ++linkageIt) {
+
+        if((*linkageIt)->needsUpdate_)
+            (*linkageIt)->updateFrames();
+        
+        // TODO: Consider using if((*linkageIt)->hasParent_) instead to avoid use of pointers
+        if ((*linkageIt)->parentLinkage_ == 0)
+//        {
+            (*linkageIt)->respectToRobot_ = (*linkageIt)->respectToFixed_;
+//        } else {
+//            (*linkageIt)->respectToRobot_ = (*linkageIt)->parentLinkage_->tool_.respectToRobot() * (*linkageIt)->respectToFixed_;
+//        }
     }
+
 }
 
 

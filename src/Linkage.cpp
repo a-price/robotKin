@@ -156,9 +156,11 @@ void Joint::setJointAxis(AXIS axis)
     jointAxis_.normalize();
 }
 
+AXIS Joint::getJointAxis() { return jointAxis_; }
+
 // Joint Methods
 double Joint::value() const { return value_; }
-rk_result_t Joint::value(double newValue)
+rk_result_t Joint::value(double newValue, bool update)
 {
     rk_result_t result = RK_SOLVED;
 
@@ -166,15 +168,20 @@ rk_result_t Joint::value(double newValue)
     {
         value_ = min_;
         result = RK_HIT_LOWER_LIMIT;
+//        cerr << "Joint " << name() << " hit a lower limit (" << min_ << ")" << endl;
     }
     else if(newValue > max_)
     {
         value_ = max_;
         result = RK_HIT_UPPER_LIMIT;
+//        cerr << "Joint " << name() << " hit an upper limit (" << max_ << ")" << endl;
     }
     else
         value_ = newValue;
-    value_ = newValue;
+
+    if(hasRobot)
+        if(!robot_->imposeLimits)
+            value_ = newValue;
 
     if (jointType_ == REVOLUTE) {
         respectToFixedTransformed_ = respectToFixed_ * Eigen::AngleAxisd(value_, jointAxis_);
@@ -183,13 +190,18 @@ rk_result_t Joint::value(double newValue)
     } else {
         respectToFixedTransformed_ = respectToFixed_;
     }
+    
+    if( hasLinkage )
+        linkage_->needsUpdate_ = true;
 
     // TODO: Decide if it is efficient to have this here
-    if ( hasLinkage )
+    if ( hasLinkage && update )
         linkage_->updateFrames();
 
     return result;
 }
+
+JointType Joint::getJointType(){ return jointType_; }
 
 double Joint::min() const { return min_; }
 void Joint::min(double newMin)
@@ -484,6 +496,21 @@ string Linkage::getParentLinkageName()
         return "";
 }
 
+Joint& Joint::parentJoint()
+{
+    if(hasLinkage)
+    {
+        if(localID()>0)
+            return linkage().joint(localID()-1);
+        else if(linkage().hasParent)
+            return linkage().parentLinkage().joint(linkage().parentLinkage().nJoints()-1);
+    }
+
+    Joint* invalidJoint = new Joint;
+    invalidJoint->name("invalid");
+    return *invalidJoint;
+}
+
 size_t Linkage::getRobotID()
 {
     if(hasRobot)
@@ -679,7 +706,7 @@ size_t Linkage::jointNameToIndex(string jointName)
 {
     map<string,size_t>::iterator j;
     j = jointNameToIndex_.find(jointName);
-    if( j == jointNameToIndex_.end() )
+    if( j != jointNameToIndex_.end() )
         return j->second;
     else
         // TODO: Decide if this is a good idea
@@ -748,18 +775,18 @@ VectorXd Linkage::values() const
     return theValues;
 }
 
-bool Linkage::values(const VectorXd& someValues)
+bool Linkage::values(const VectorXd& allValues)
 {    
-    if(someValues.size() == nJoints())
+    if(allValues.size() == nJoints())
     {
         for (size_t i = 0; i < nJoints(); ++i) {
-            joints_[i]->value(someValues(i));
+            joints_[i]->value(allValues(i), false);
         }
         updateFrames();
         return true;
     }
     
-    std::cerr << "ERROR! Number of values (" << someValues.size() << ") does not match "
+    std::cerr << "ERROR! Number of values (" << allValues.size() << ") does not match "
               << "the number of joints (" << nJoints() << ")!" << std::endl;
     return false;
 }
@@ -968,6 +995,8 @@ void Linkage::updateFrames()
         
         if(hasChildren)
             updateChildLinkage();
+        
+        needsUpdate_ = false;
     }
 }
 

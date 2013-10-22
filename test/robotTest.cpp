@@ -91,7 +91,7 @@
 #include "Robot.h"
 #include "Hubo.h"
 
-
+#include <time.h>
 
 //------------------------------------------------------------------------------
 // Namespaces
@@ -401,27 +401,76 @@ void tutorial()
     cout << "-- Add methods to add and remove joints" << endl;
     */
 
-    Robot parseTest("../urdf/drchubo.urdf");
 
+    Robot parseTest("../urdf/huboplus.urdf");
+    parseTest.linkage("Body_RSP").name("RightArm");
+    parseTest.linkage("Body_LSP").name("LeftArm");
+    parseTest.linkage("Body_RHY").name("RightLeg");
     parseTest.linkage("Body_LHY").name("LeftLeg");
 
-    VectorXd jointValues;
-    jointValues.resize(parseTest.linkage("LeftLeg").nJoints());
+
+
+
+    VectorXd jointValues(parseTest.linkage("LeftLeg").nJoints());
+
+    jointValues <<  1.79315, 0.490851, -1.26039, 1.38938, 0.503333, 0.0365566, -2.97178;
+
+    for(int i=0; i<parseTest.linkage("LeftLeg").nJoints(); i++)
+        parseTest.linkage("LeftLeg").setJointValue(i, jointValues[i]);
+
+    cout << "Start:" << endl << parseTest.linkage("LeftLeg").tool().respectToRobot().matrix() << endl;
 
     TRANSFORM target = parseTest.linkage("LeftLeg").tool().respectToRobot();
-    target.translate(Vector3d(0, 0, 0.15));
+//    target.rotate(AngleAxisd(10*M_PI/180, Vector3d::UnitY()));
+//    target.translate(Vector3d(0.02, 0, 0));
 
-    parseTest.dampedLeastSquaresIK_linkage("LeftLeg", jointValues, target);
+    jointValues << 0, 0, 0, 0, 0, 0, 0;
 
-    cout << "Target:" << endl;
-    cout << target.matrix() << endl;
+    cout << "Goal:" << endl << target.matrix() << endl;
 
-    cout << "End:" << endl;
-    cout << parseTest.linkage("LeftLeg").tool().respectToRobot().matrix() << endl;
+    rk_result_t result = parseTest.dampedLeastSquaresIK_linkage("LeftLeg", jointValues, target);
 
-    cout << "Joint Angles: " << jointValues.transpose() << endl;
+    cout << "End:" << endl << parseTest.linkage("LeftLeg").tool().respectToRobot().matrix() << endl;
 
-    cout << jointValues[2] + jointValues[3] + jointValues[4] << endl;
+    cout << "Result: " << rk_result_to_string(result) << endl;
+
+//    parseTest.joint("RSR").value(-90*M_PI/180);
+//    parseTest.linkage("RightArm").printInfo();
+
+
+    parseTest.linkage("RightArm").tool().respectToFixed(parseTest.joint("RWR_dummy").respectToFixed());
+    parseTest.linkage("RightArm").printInfo();
+
+
+//    TRANSFORM target = parseTest.linkage("LeftLeg").tool().respectToRobot();
+//    target.translate(Vector3d(0.1, 0, 0.1));
+//    target.rotate(AngleAxisd(10*M_PI/180, Vector3d::UnitZ()));
+
+
+//    cout << "Start:" << endl;
+//    cout << parseTest.linkage("LeftLeg").tool().respectToRobot().matrix() << endl;
+
+//    parseTest.dampedLeastSquaresIK_linkage("LeftLeg", jointValues, target);
+
+//    cout << "Target:" << endl;
+//    cout << target.matrix() << endl;
+
+//    cout << "End:" << endl;
+//    cout << parseTest.linkage("LeftLeg").tool().respectToRobot().matrix() << endl;
+
+//    cout << "Joint Angles: " << jointValues.transpose() << endl;
+
+//    cout << jointValues[2] + jointValues[3] + jointValues[4] << endl;
+
+//    cout << "Error: " << (parseTest.linkage("LeftLeg").tool().respectToRobot().translation()
+//                          - target.translation()).norm() << endl;
+
+
+
+
+
+
+
 
 //    parseTest.linkage("LeftLeg").printInfo();
 
@@ -520,7 +569,7 @@ void tutorial()
 
 
 
-    // ________________________ IK Test Area __________________________
+    // ________________________ IK Speed Test Area __________________________
 
 
 

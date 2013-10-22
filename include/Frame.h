@@ -56,6 +56,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include <string>
+#include <vector>
 #include <iostream>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
@@ -74,11 +75,15 @@ namespace RobotKin {
     // That way I can make .respectTo() and other such useful member functions
 
     typedef Eigen::Vector3d   AXIS;
+
+    typedef Eigen::Matrix<double, 6, 1> SCREW;
+    typedef Eigen::Matrix<double, 6, 6> Matrix6d;
     
     class Robot;
     class Linkage;
     class Joint;
     class Tool;
+    class Constraints;
     
     //------------------------------------------------------------------------------
     // Typedefs
@@ -161,6 +166,15 @@ namespace RobotKin {
 
     std::string JointType_to_string(JointType type);
 
+
+    void clampMag(Eigen::VectorXd& v, double clamp);
+    void clampMag(SCREW& v, double clamp);
+    void clampMag(TRANSLATION& v, double clamp);
+    void clampMaxAbs(Eigen::VectorXd& v, double clamp);
+    double minimum(double a, double b);
+    double mod(double x, double y);
+    double wrapToPi(double angle);
+    void wrapToJointLimits(Robot& robot, const std::vector<size_t>& jointIndices, Eigen::VectorXd& jointValues);
     
     class Frame
     {
@@ -196,10 +210,6 @@ namespace RobotKin {
 
         TRANSFORM respectTo(const Frame* aFrame) const;
         TRANSFORM withRespectTo(const Frame &frame) const;
-        TRANSFORM withRespectTo(const Robot &robot) const;
-        TRANSFORM withRespectTo(const Linkage &linkage) const;
-        TRANSFORM withRespectTo(const Joint &joint) const;
-        TRANSFORM withRespectTo(const Tool &tool) const;
         
         virtual void printInfo() const;
         

@@ -80,7 +80,8 @@ if( HAVE_URDF_PARSE )
     endif( urdfdom_FOUND )
 endif( HAVE_URDF_PARSE )
 
-install(FILES   include/Robot.h
+install(FILES   include/Constraints.h
+                include/Robot.h
                 include/Frame.h
                 include/Linkage.h
                 include/urdf_parsing.h

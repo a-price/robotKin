@@ -576,7 +576,7 @@ Linkage Hubo::initializeRightLeg()
 }
 
 
-void Hubo::armFK(TRANSFORM& B, const Vector6d& q, size_t side)
+void Hubo::armFK(TRANSFORM& B, const SCREW& q, size_t side)
 {
     size_t index;
     if (side == SIDE_RIGHT) {
@@ -590,7 +590,7 @@ void Hubo::armFK(TRANSFORM& B, const Vector6d& q, size_t side)
     linkage(index).values(q0);
 }
 
-void Hubo::legFK(TRANSFORM& B, const Vector6d& q, size_t side)
+void Hubo::legFK(TRANSFORM& B, const SCREW& q, size_t side)
 {
     size_t index;
     if (side == SIDE_RIGHT) {
@@ -604,7 +604,7 @@ void Hubo::legFK(TRANSFORM& B, const Vector6d& q, size_t side)
     linkage(index).values(q0);
 }
 
-bool Hubo::armAnalyticalIK(VectorXd& q, const TRANSFORM& B, const Vector6d& qPrev, size_t side)
+bool Hubo::armAnalyticalIK(VectorXd& q, const TRANSFORM& B, const SCREW& qPrev, size_t side)
 {
     q.resize(6,1);
     Eigen::ArrayXXd qAll(6,8);
@@ -623,7 +623,7 @@ bool Hubo::armAnalyticalIK(VectorXd& q, const TRANSFORM& B, const Vector6d& qPre
     double C2, C4, C5, C6;
     
     Eigen::MatrixXd limits(6,2);
-    Vector6d offsets; offsets.setZero();
+    SCREW offsets; offsets.setZero();
     
     // Parameters
     //double l1 = armLengths[0];
@@ -899,7 +899,7 @@ bool Hubo::armAnalyticalIK(VectorXd& q, const TRANSFORM& B, const Vector6d& qPre
         for( size_t i=0; i<8; i++)
         {
             // create a 6d vector of angles of solution i
-            Vector6d qtemp = qAll.col(i).matrix();
+            SCREW qtemp = qAll.col(i).matrix();
             // take the min of the angles and the joint upper limits
             qtemp = qtemp.cwiseMin(limits.col(1));
             // then take the max of those angles and the joint lower limits
@@ -924,7 +924,7 @@ bool Hubo::armAnalyticalIK(VectorXd& q, const TRANSFORM& B, const Vector6d& qPre
 }
 
 
-bool Hubo::legAnalyticalIK(VectorXd& q, const TRANSFORM& B, const Vector6d& qPrev, size_t side) {
+bool Hubo::legAnalyticalIK(VectorXd& q, const TRANSFORM& B, const SCREW& qPrev, size_t side) {
     Eigen::ArrayXXd qAll(6,8);
     
     // Declarations
@@ -940,7 +940,7 @@ bool Hubo::legAnalyticalIK(VectorXd& q, const TRANSFORM& B, const Vector6d& qPre
     double C2, C4, C5, C6;
     
     Eigen::MatrixXd limits(6,2);
-    Vector6d offsets; offsets.setZero();
+    SCREW offsets; offsets.setZero();
     
     // Parameters
     //    double l1 = (79.5+107)/1000.0;
@@ -1104,7 +1104,7 @@ bool Hubo::legAnalyticalIK(VectorXd& q, const TRANSFORM& B, const Vector6d& qPre
         for(size_t i=0; i<8; i++)
         {
             // create a 6d vector of angles of solution i
-            Vector6d qtemp = qAll.col(i).matrix();
+            SCREW qtemp = qAll.col(i).matrix();
             // take the min of the angles and the joint upper limits
             qtemp = qtemp.cwiseMin(limits.col(1));
             // then take the max of those angles and the joint lower limits

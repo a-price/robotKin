@@ -1,5 +1,5 @@
-#define HAVE_URDF_PARSE
 
+//#define HAVE_URDF_PARSE // Uncomment this to get Qt to autocomplete below
 #ifdef HAVE_URDF_PARSE
 
 #include <urdf_parser/urdf_parser.h>
@@ -37,6 +37,13 @@ bool RobotKinURDF::loadURDF(RobotKin::Robot &robot, string filename)
     std::fstream xml_file( filename.c_str(),
                              std::fstream::in );
 
+    if(!xml_file.good())
+    {
+        std::cerr << "Could not find file \'" << filename << "\' to parse!" << endl;
+        robot.name("invalid");
+        return false;
+    }
+
     while( xml_file.good() ) {
     std::string line;
     std::getline( xml_file, line );
@@ -45,16 +52,21 @@ bool RobotKinURDF::loadURDF(RobotKin::Robot &robot, string filename)
 
     xml_file.close();
 
-    loadURDFString(robot, xml_model_string);
+    if(RobotKinURDF::loadURDFString(robot, xml_model_string))
+	{
+        robot.updateFrames();
+        return true;
+    }
+    else
+        return false;
 }
 
 bool RobotKinURDF::loadURDFString(RobotKin::Robot& robot, string xml_model_string)
 {
     boost::shared_ptr<urdf::ModelInterface> model;
 
+
     // Parse model using the urdf_parser
-    // TODO: Make sure the file exists before we ask urdfdom to parse it
-    // Otherwise we get a segfault -____-U
     model = urdf::parseURDF( xml_model_string );
 
     // Output some info from the urdf
@@ -102,7 +114,9 @@ bool RobotKinURDF::loadURDFString(RobotKin::Robot& robot, string xml_model_strin
 
 
 
-    return exploreLink(robot, model, rootLink, 0, -1);
+    exploreLink(robot, model, rootLink, 0, -1);
+
+    return true;
 }
 
 
@@ -190,6 +204,7 @@ bool RobotKinURDF::addURDFJoint(RobotKin::Linkage &linkage, boost::shared_ptr<ur
 
     RobotKin::Link link;
     boost::shared_ptr<urdf::Link> childLink;
+
     model->getLink(ujoint->child_link_name, childLink);
     parseURDFLink(link, childLink);
 

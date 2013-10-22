@@ -129,6 +129,7 @@ namespace RobotKin {
         //----------------------------------------------------------------------
         // Joint Friends
         //----------------------------------------------------------------------
+        friend class Frame;
         friend class Linkage;
         friend class Robot;
         friend class Link;
@@ -169,14 +170,17 @@ namespace RobotKin {
         // Joint Public Member Functions
         //----------------------------------------------------------------------
         double value() const;
-        rk_result_t value(double newValue);
+        rk_result_t value(double newValue, bool update=true);
 
         double min() const;
         double max() const;
         void min(double newMin);
         void max(double newMax);
 
+        JointType getJointType();
+
         void setJointAxis(AXIS axis);
+        AXIS getJointAxis();
 
         const TRANSFORM& respectToFixed() const;
         void respectToFixed(TRANSFORM aCoordinate);
@@ -190,6 +194,8 @@ namespace RobotKin {
         TRANSFORM respectToRobot() const;
 
         TRANSFORM respectToWorld() const;
+
+        Joint& parentJoint();
 
         size_t getLinkageID();
         std::string getLinkageName();
@@ -306,6 +312,7 @@ namespace RobotKin {
         //--------------------------------------------------------------------------
         // Linkage Friends
         //--------------------------------------------------------------------------
+        friend class Frame;
         friend class Joint;
         friend class Tool;
         friend class Robot;
@@ -408,7 +415,7 @@ namespace RobotKin {
         Tool& tool();
         
         Eigen::VectorXd values() const;
-        bool values(const Eigen::VectorXd &someValues);
+        bool values(const Eigen::VectorXd &allValues);
         
         const TRANSFORM& respectToFixed() const;
         void respectToFixed(TRANSFORM aCoordinate);
@@ -424,7 +431,8 @@ namespace RobotKin {
         
         size_t getParentLinkageID();
         std::string getParentLinkageName();
-        
+
+
         size_t getRobotID();
         std::string getRobotName();
         
@@ -464,10 +472,12 @@ namespace RobotKin {
         static bool defaultAnalyticalIK(Eigen::VectorXd& q, const TRANSFORM& B, const Eigen::VectorXd& qPrev);
         
         
+        
         //--------------------------------------------------------------------------
         // Linkage Private Member Variables
         //--------------------------------------------------------------------------
         bool initializing_;
+        bool needsUpdate_;
         std::map<std::string, size_t> jointNameToIndex_;
         
         

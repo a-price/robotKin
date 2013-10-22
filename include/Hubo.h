@@ -70,7 +70,7 @@ namespace RobotKin
 //------------------------------------------------------------------------------
 typedef Eigen::Matrix< double, 4, 1 > Vector4d;
 typedef Eigen::Matrix< double, 5, 1 > Vector5d;
-typedef Eigen::Matrix< double, 6, 1 > Vector6d;
+typedef Eigen::Matrix< double, 6, 1 > SCREW;
 typedef Eigen::Matrix< double, 25, 1 > Vector25d;
 typedef Eigen::Matrix<double, 1, 2> Matrix12d;
 typedef Eigen::Matrix<double, 6, 2>  Matrix62d;
@@ -101,15 +101,15 @@ public:
     bool leftArmAnalyticalIK(Eigen::VectorXd& q, const TRANSFORM& B, const Eigen::VectorXd& qPrev);
     bool rightArmAnalyticalIK(Eigen::VectorXd& q, const TRANSFORM& B, const Eigen::VectorXd& qPrev);
     
-    void armFK(TRANSFORM& B, const Vector6d& q, size_t side);
-    bool armAnalyticalIK(Eigen::VectorXd& q, const TRANSFORM& B, const Vector6d& qPrev, size_t side);
+    void armFK(TRANSFORM& B, const SCREW& q, size_t side);
+    bool armAnalyticalIK(Eigen::VectorXd& q, const TRANSFORM& B, const SCREW& qPrev, size_t side);
     
     
     bool leftLegAnalyticalIK(Eigen::VectorXd& q, const TRANSFORM& B, const Eigen::VectorXd& qPrev);
     bool rightLegAnalyticalIK(Eigen::VectorXd& q, const TRANSFORM& B, const Eigen::VectorXd& qPrev);
     
-    void legFK(TRANSFORM& B, const Vector6d& q, size_t side);
-    bool legAnalyticalIK(Eigen::VectorXd& q, const TRANSFORM& B, const Vector6d& qPrev, size_t side);
+    void legFK(TRANSFORM& B, const SCREW& q, size_t side);
+    bool legAnalyticalIK(Eigen::VectorXd& q, const TRANSFORM& B, const SCREW& qPrev, size_t side);
     
     //--------------------------------------------------------------------------
     // Hubo Public Member Variables

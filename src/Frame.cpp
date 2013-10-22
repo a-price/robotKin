@@ -101,6 +101,15 @@ void Frame::name(string newName)
             robot_->jointNameToIndex_.erase(name_);
         }
     }
+
+    if(hasLinkage)
+    {
+        if(frameType()==JOINT)
+        {
+            linkage_->jointNameToIndex_[newName] = linkage_->jointNameToIndex_[name_];
+            linkage_->jointNameToIndex_.erase(name_);
+        }
+    }
     name_ = newName;
 }
 
@@ -116,9 +125,6 @@ TRANSFORM Frame::respectTo(const Frame* aFrame) const
 }
 
 TRANSFORM Frame::withRespectTo(const Frame &frame) const { return respectTo(&frame); }
-TRANSFORM Frame::withRespectTo(const Robot &robot) const { return respectTo(&robot); }
-TRANSFORM Frame::withRespectTo(const Linkage &linkage) const { return respectTo(&linkage); }
-TRANSFORM Frame::withRespectTo(const Joint &joint) const { return respectTo(&joint); }
 
 void Frame::printInfo() const
 {

@@ -62,6 +62,7 @@
 #include <string>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
+#include "Constraints.h"
 
 
 
@@ -112,13 +113,9 @@ namespace RobotKin {
 
         Link rootLink;
 
-        double errorClamp;
-        double deltaClamp;
-        double gammaMax;
-        double tolerance;
-        double transTolerance;
-        double damp;
-        size_t maxIterations;
+        bool imposeLimits;
+
+        bool verbose;
         
         //--------------------------------------------------------------------------
         // Robot Public Member Functions
@@ -161,20 +158,21 @@ namespace RobotKin {
         Joint& joint(std::string jointName);
 
         // Convenience function
-        rk_result_t setJointValue(size_t jointIndex, double val);
-        rk_result_t setJointValue(std::string jointName, double val);
+        rk_result_t setJointValue(size_t jointIndex, double val, bool update=true);
+        rk_result_t setJointValue(std::string jointName, double val, bool update=true);
         
         const std::vector<Joint*>& const_joints() const;
         std::vector<Joint*>& joints();
         
         Eigen::VectorXd values() const;
-        void values(const Eigen::VectorXd& someValues);
+        void values(const Eigen::VectorXd& allValues);
         void values(const std::vector<size_t> &jointIndices, const Eigen::VectorXd& jointValues);
         
         const TRANSFORM& respectToFixed() const;
         void respectToFixed(TRANSFORM aCoordinate);
         
         TRANSFORM respectToWorld() const;
+	void respectToWorld(TRANSFORM Tworld );
         
         void jacobian(Eigen::MatrixXd& J, const std::vector<Joint*>& jointFrames, TRANSLATION location, const Frame* refFrame) const;
         
@@ -220,13 +218,13 @@ namespace RobotKin {
         /////////////////
 
         rk_result_t dampedLeastSquaresIK_chain(const std::vector<size_t> &jointIndices, Eigen::VectorXd &jointValues,
-                                          const TRANSFORM &target, const TRANSFORM &finalTF = TRANSFORM::Identity());
+                                               const TRANSFORM &target, RobotKin::Constraints& constraints=RobotKin::Constraints::Defaults());
 
         rk_result_t dampedLeastSquaresIK_chain(const std::vector<std::string>& jointNames, Eigen::VectorXd& jointValues,
-                                          const TRANSFORM& target, const TRANSFORM &finalTF = TRANSFORM::Identity());
+                                               const TRANSFORM& target, RobotKin::Constraints& constraints=RobotKin::Constraints::Defaults());
 
         rk_result_t dampedLeastSquaresIK_linkage(const std::string linkageName, Eigen::VectorXd &jointValues,
-                                            const TRANSFORM& target, const TRANSFORM &finalTF = TRANSFORM::Identity());
+                                                 const TRANSFORM& target, RobotKin::Constraints& constraints=RobotKin::Constraints::Defaults());
 
         /////////////////
 
@@ -244,6 +242,9 @@ namespace RobotKin {
         /////////////////
 
         void gravityJointTorques(const std::vector<size_t> &jointIndices, Eigen::VectorXd &torques, bool downstream=true);
+
+
+        static Robot& Default();
 
     protected:
         //--------------------------------------------------------------------------
