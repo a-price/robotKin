@@ -85,7 +85,6 @@ Robot::Robot(string filename, string name, size_t id)
       verbose(false)
 {
     std::cerr << "There was no URDF Parser installed when you compiled RobotKin!" << std::endl;
-    return false;
 }
 
 bool Robot::loadURDF(string filename)
