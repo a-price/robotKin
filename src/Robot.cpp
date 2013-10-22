@@ -38,7 +38,6 @@ Robot::Robot()
           imposeLimits(true),
           verbose(false)
 {
-#warning "Test Warning for automated builds."
     linkages_.resize(0);
     frameType_ = ROBOT;
 }
