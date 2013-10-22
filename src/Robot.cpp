@@ -38,7 +38,6 @@ Robot::Robot()
           imposeLimits(true),
           verbose(false)
 {
-#error "Trying to break the build."
     linkages_.resize(0);
     frameType_ = ROBOT;
 }
